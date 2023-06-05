@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.mingge.mapper.UserMapper">
+    <insert id="addUserAndRole">
+        insert into sys_user_role(user_id,role_id) values
+            <foreach collection="roleIds" separator="," item="roleId">
+                (#{userId},#{roleId})
+            </foreach>
+    </insert>
+    <insert id="addRoleUser">
+        insert into sys_user_role(user_id,role_id) values
+        <foreach collection="roleIds" item="roleId" separator=",">
+            (#{userId},#{roleId})
+        </foreach>
+    </insert>
+    <!--    如果所有字段都为空，执行上面的 SQL 语句会将所有字段都更新为空值 -->
+<!--    <update id="modifyId">-->
+<!--        update sys_user <set>-->
+<!--        <if test="avatar != '' and avatar != null"> avatar = #{avatar},</if>-->
+<!--        <if test="email != '' and email != null">email = #{email},</if>-->
+<!--        <if test="nickName != '' and nickName != null">nick_name = #{nickName},</if>-->
+<!--        <if test="sex != '' and sex != null">sex = #{sex},</if>-->
+<!--    </set>-->
+<!--            where id = #{id}-->
+<!--    </update>-->
+    <update id="modifyId">
+        update sys_user
+        <trim prefix="set" suffixOverrides=",">
+            <if test="avatar != '' and avatar != null"> avatar = #{avatar},</if>
+            <if test="email != '' and email != null"> email = #{email},</if>
+            <if test="nickName != '' and nickName != null"> nick_name = #{nickName},</if>
+            <if test="sex != '' and sex != null"> sex = #{sex},</if>
+        </trim>
+        <where>
+            id = #{id}
+            <if test="avatar == '' and email == '' and nickName == '' and sex == ''">
+                and false
+            </if>    <!--  都为null，添加 false 条件，表示不更新任何记录  -->
+        </where>
+    </update>
+    <update id="updateByUserId">
+        update sys_user set `status` = #{status} where id = #{userId}
+    </update>
+    <delete id="deleteRoleByUserId">
+        delete from sys_user_role where user_id = #{userId}
+    </delete>
+
+    <select id="selectUserByuserNameOrNickName" resultType="com.mingge.domain.entity.User">
+        select user_name,nick_name from sys_user where user_name = #{userName} or nick_name = #{nickName}
+    </select>
+    <select id="selectUsers" resultType="com.mingge.domain.vo.UserVo">
+        SELECT avatar,create_time,email,id,nick_name,phonenumber,sex,`status`,update_by,update_time,user_name
+            FROM sys_user where del_flag = 0
+            <if test="userName != null and userName != '' ">
+                AND user_name LIKE CONCAT('%',#{userName},'%')
+            </if>
+            <if test="phonenumber != null and phonenumber != '' ">
+                AND phonenumber = #{phonenumber}
+            </if>
+            <if test="status != null and status != '' ">
+                AND status = #{status}
+            </if>
+    </select>
+    <select id="selectByUserName" resultType="com.mingge.domain.entity.User">
+        select id from sys_user where user_name = #{userName}
+    </select>
+    <select id="selectByEmail" resultType="com.mingge.domain.entity.User">
+        select id from sys_user where email = #{email}
+    </select>
+    <select id="selectByphonenumber" resultType="com.mingge.domain.entity.User">
+        select id from sys_user where phonenumber = #{phonenumber}
+    </select>
+    <select id="selectUserById" resultType="com.mingge.domain.vo.UserByIdVo">
+        select email,id,nick_name,sex,status,user_name
+        from sys_user where id = #{id}
+    </select>
+    <select id="selectRoleIdsByUserId" resultType="java.lang.Long">
+        select role_id from sys_user_role where user_id = #{userId}
+    </select>
+
+
+</mapper>
